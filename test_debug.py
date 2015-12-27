@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import base64
+import re
 import unittest
 
 from tornado.escape import to_unicode
@@ -98,7 +99,7 @@ class DebugTestCase(unittest.TestCase):
             response = self.assertDebugResponseCode(page='simple?{}'.format(param),
                                                     expected_code=http_codes.UNAUTHORIZED)
             self.assertIn('Www-Authenticate', response.headers)
-            self.assertRegexpMatches(response.headers['Www-Authenticate'], 'Basic realm="[^"]+"')
+            self.assertTrue(re.match('Basic realm="[^"]+"', response.headers['Www-Authenticate']))
 
             self.assertDebugResponseCode(page='simple?{}'.format(param),
                                          headers={'Authorization': self.DEBUG_BASIC_AUTH},
