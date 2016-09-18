@@ -7,17 +7,14 @@ from tornado.escape import to_unicode
 
 from frontik import http_codes
 
-from .instances import create_basic_auth_header, frontik_non_debug
+from .instances import create_basic_auth_header, frontik_test_app, frontik_non_debug
 
 
 class DebugTestCase(unittest.TestCase):
     DEBUG_BASIC_AUTH = create_basic_auth_header('user:god')
 
     def test_complex_debug_page(self):
-        response = frontik_non_debug.get_page(
-            'debug?debug', headers={'Authorization': self.DEBUG_BASIC_AUTH}
-        )
-
+        response = frontik_test_app.get_page('debug?debug')
         response_content = to_unicode(response.content)
 
         self.assertEqual(response.status_code, 200)
