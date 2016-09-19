@@ -13,7 +13,6 @@ class TestMicroHandler(unittest.TestCase):
 
         self.assertEqual(json['put']['error'], 'forbidden')
         self.assertEqual(json['post'], {'POST': 'post'})
-        self.assertEqual(json['preprocessor'], True)
         self.assertEqual(json['delete'], None)
 
     def test_fail_on_error(self):

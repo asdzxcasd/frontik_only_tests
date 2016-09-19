@@ -4,17 +4,7 @@ from frontik.handler import HTTPError
 from frontik.micro_handler import MicroHandler
 
 
-def get_page(handler, callback):
-    handler.json.put({
-        'preprocessor': True
-    })
-
-    callback()
-
-
 class Page(MicroHandler):
-    @MicroHandler.add_preprocessor(get_page)
-    @MicroHandler.add_preprocessor(get_page)
     def get_page(self):
         fail_on_error = self.get_argument('fail_on_error', 'false') == 'true'
 

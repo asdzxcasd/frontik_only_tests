@@ -1,56 +1,45 @@
 # coding=utf-8
 
-from frontik.handler import HTTPError, PageHandler
+from tornado.concurrent import Future
+
+from frontik.handler import PageHandler, preprocessor
 
 
-def first_preprocessor(handler, callback):
-    handler.set_header('Content-Type', 'text/plain')
-    handler.text = '1'
-    callback()
+@preprocessor
+def dep1(handler):
+    handler.run.append('dep1')
+
+    f = Future()
+    f.set_result('dep1')
+    return f
 
 
-def second_preprocessor(handler, callback):
-    if handler.get_argument('fail', 'false') == 'true':
-        raise HTTPError(503, 'error in preprocessor')
-    else:
-        handler.text += ' 2'
-        callback()
+@preprocessor
+def dep2(handler):
+    future = handler.post_url(handler.request.host + handler.request.path)
+    handler.run.append('dep2')
+    handler.json.put(future)
+    return future
 
 
-def third_preprocessor(handler, callback):
-    handler.text += ' 3'
-    if handler.get_argument('nocallback', 'false') != 'true':
-        callback()
-
-
-def async_preprocessor(handler, callback):
-    def _cb(data, response):
-        handler.text += data.decode()
-        callback()
-
-    handler.post_url(handler.request.host + handler.request.path, callback=_cb)
-
-
-@PageHandler.add_preprocessor
-def preprocessor_as_decorator(handler, callback):
-    handler.text += ' 5'
-    callback()
-
-
-@PageHandler.add_preprocessor
-def post_preprocessor(handler, callback):
-    handler.text += ' 4'
-    callback()
+@preprocessor
+def dep3(handler):
+    handler.run.append('dep3')
 
 
 class Page(PageHandler):
-    preprocessors = (first_preprocessor, second_preprocessor, third_preprocessor)
+    def __init__(self, application, request, logger, **kwargs):
+        super(Page, self).__init__(application, request, logger, **kwargs)
+        self.run = []
 
-    @PageHandler.add_preprocessor(async_preprocessor)
-    @preprocessor_as_decorator
+    @dep1
+    @preprocessor([dep2, dep3])
     def get_page(self):
-        self.text += ' 6'
+        self.json.put({
+            'run': self.run
+        })
 
-    @post_preprocessor
     def post_page(self):
-        self.text = ' ({})'.format(self.text)
+        self.json.put({
+            'post': True
+        })
